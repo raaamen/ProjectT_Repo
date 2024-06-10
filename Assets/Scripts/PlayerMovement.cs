@@ -6,11 +6,14 @@ using UnityEngine.InputSystem;
 
 public class PlayerMovement : MonoBehaviour
 {
+    [Header("Player")]
 
     private PlayerInput plrInput;
 
+    [Tooltip("Pivot point of the gun.")]
     [SerializeField]
     private Transform gunPivotPoint;
+    [Tooltip("Gun game obj")]
     [SerializeField]
     private GameObject playerGun;
 
@@ -19,21 +22,32 @@ public class PlayerMovement : MonoBehaviour
     private Vector2 _move;
     [SerializeField]
     private Vector2 _look;
-    [SerializeField]
-    private bool _shoot;
+    
     [SerializeField]
     private bool _dodgeroll;
+    
+    //Is mouse movement above this threshold?
+    [SerializeField]
+    private float _threshold = 0.01f;
 
     private Rigidbody rb;
     
     [SerializeField]
     private float speed = 0.1f;
-    
 
+    [SerializeField]
+    private float sensitivity;
+    
+    private Vector2 pivotAngle;
+    [SerializeField]
+    private float minY = -89.0f;
+    [SerializeField]
+    private float maxY = 89.0f;
 
     // Start is called before the first frame update
     void Start()
     {
+        Cursor.lockState = CursorLockMode.Locked;
         rb = GetComponent<Rigidbody>();
         plrInput = GetComponent<PlayerInput>();
     }
@@ -42,11 +56,12 @@ public class PlayerMovement : MonoBehaviour
     void FixedUpdate()
     {
         MovePlayer();
+        RotateGun();
     }
 
 
-    void OnMove(InputAction.CallbackContext context){
-        _move = context.ReadValue<Vector2>();
+    public void OnMove(InputValue value){
+        _move = value.Get<Vector2>();
 
     }
 
@@ -55,13 +70,22 @@ public class PlayerMovement : MonoBehaviour
         rb.MovePosition(transform.position += (moveDirection*Time.deltaTime*speed));
     }
 
-    void OnLook(InputAction.CallbackContext context){
-        _look = context.ReadValue<Vector2>();
+    public void OnLook(InputValue value){
+        _look = value.Get<Vector2>();
+
     }
 
-    void OnShoot(InputAction.CallbackContext context){
-        _shoot = context.ReadValue<bool>();
+    void RotateGun(){
+        if (_look.sqrMagnitude < _threshold){
+            return;
+        }
+        pivotAngle += _look*sensitivity*Time.deltaTime;
+        //pivotAngle.x = Mathf.Clamp(pivotAngle.x, minY, maxY);
+        if (pivotAngle.y < -360f) pivotAngle.y += 360f;
+        if (pivotAngle.y > 360f) pivotAngle.y -= 360f;
+        gunPivotPoint.localRotation = Quaternion.Euler(pivotAngle.y, pivotAngle.x, 0f);
     }
+
 
     void OnDodgeRoll(InputAction.CallbackContext context){
         _dodgeroll = context.ReadValue<bool>();
