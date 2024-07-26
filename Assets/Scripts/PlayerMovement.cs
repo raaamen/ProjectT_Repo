@@ -10,12 +10,16 @@ public class PlayerMovement : MonoBehaviour
 
     private PlayerInput plrInput;
 
+    LineRenderer lineRenderer;
+
     [Tooltip("Pivot point of the gun.")]
     [SerializeField]
     private Transform gunPivotPoint;
     [Tooltip("Gun game obj")]
     [SerializeField]
     private GameObject playerGun;
+
+    public GameObject cursor;
 
     //Input Vectors
     [SerializeField]
@@ -47,7 +51,9 @@ public class PlayerMovement : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        Cursor.lockState = CursorLockMode.Locked;
+        lineRenderer = GetComponent<LineRenderer>();
+        lineRenderer.enabled = true;
+        //Cursor.lockState = CursorLockMode.Locked;
         rb = GetComponent<Rigidbody>();
         plrInput = GetComponent<PlayerInput>();
     }
@@ -79,11 +85,38 @@ public class PlayerMovement : MonoBehaviour
         if (_look.sqrMagnitude < _threshold){
             return;
         }
+
+        Vector3 worldPosition;
+        Plane plane = new Plane(Vector3.up, 0);
+
+        
+        Ray ray1 = Camera.main.ScreenPointToRay(Input.mousePosition);
+        RaycastHit hitData;
+
+        if(Physics.Raycast(ray1, out hitData))
+            {
+                worldPosition = hitData.point;
+                //cursor.transform.position = worldPosition;
+                gunPivotPoint.transform.LookAt(worldPosition, Vector3.up);
+            }
+
+        
+        //gunPivotPoint.transform.LookAt(worldPosition, Vector3.up);
+
+        //OLD        
+        /*
         pivotAngle += _look*sensitivity*Time.deltaTime;
         //pivotAngle.x = Mathf.Clamp(pivotAngle.x, minY, maxY);
         if (pivotAngle.y < -360f) pivotAngle.y += 360f;
         if (pivotAngle.y > 360f) pivotAngle.y -= 360f;
         gunPivotPoint.localRotation = Quaternion.Euler(pivotAngle.y, pivotAngle.x, 0f);
+        */
+        Ray ray = new Ray(gunPivotPoint.transform.position, gunPivotPoint.transform.forward);
+        RaycastHit hit;
+        if (Physics.Raycast(ray, out hit)){
+            lineRenderer.SetPosition(0, gunPivotPoint.transform.position);
+            lineRenderer.SetPosition(1, hit.point);
+        }
     }
 
 

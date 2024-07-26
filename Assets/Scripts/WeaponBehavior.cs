@@ -20,6 +20,8 @@ public class WeaponBehavior : MonoBehaviour
     [SerializeField]
     private Transform gunLocation;
 
+    public GameObject tempBullet;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -32,15 +34,16 @@ public class WeaponBehavior : MonoBehaviour
         
     }
 
-    public void OnShoot(InputAction.CallbackContext context){
-        _shoot = context.ReadValue<bool>();
-        Shoot();
+    public void OnShoot(InputValue value){
+        //_shoot = value.Get<bool>();
+        StartCoroutine("Shoot");
     }
 
     public IEnumerator Shoot(){
+        Debug.Log("kill myself");
         yield return new WaitForSeconds(rateOfFire);
-        var bullet = Instantiate(weaponType.bulletPrefab, gunLocation.position, currentPlayerGun.transform.rotation);
-
+        var bullet = Instantiate(tempBullet, gunLocation.position, gunLocation.transform.localRotation);
+        bullet.GetComponent<Rigidbody>().AddForce(transform.forward*1000);
         yield return null;
     }
 
